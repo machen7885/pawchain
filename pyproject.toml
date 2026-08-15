@@ -1,0 +1,30 @@
+[project]
+name = "pawchain-id"
+version = "0.1.0"
+description = "Open-set biometric identity and on-chain accountability for cats. Prototype."
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = ["evals/golden", "course"]
+
+[tool.ruff.lint]
+# F = pyflakes (catches the unused import that the Week 1 breakage demo relies on)
+# E,W = pycodestyle, I = import order, UP = pyupgrade, B = bugbear, ANN = annotations
+select = ["E", "W", "F", "I", "UP", "B", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = ["ANN201"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+include = ["evals", "ml", "api"]
+exclude = ["**/__pycache__", "evals/golden", "course", ".venv"]
+reportMissingImports = "error"
+
+[tool.pytest.ini_options]
+testpaths = ["evals", "ml", "api"]
+addopts = "-q"
