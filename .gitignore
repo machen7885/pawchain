@@ -1,0 +1,43 @@
+# Generated metrics. Never committed — the gate regenerates them.
+evals/out/*
+!evals/out/.gitkeep
+
+# Raw pet imagery and capture logs. House rule: raw pet imagery is never committed.
+data/
+*.jpg
+*.jpeg
+*.png
+*.heic
+*.mp4
+*.mov
+
+# Course source material (decks, facilitator guides) stays out of a public repo.
+*.pdf
+*.pptx
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Models and weights
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
