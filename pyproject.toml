@@ -3,6 +3,20 @@ name = "pawchain-id"
 version = "0.1.0"
 description = "Open-set biometric identity and on-chain accountability for cats. Prototype."
 requires-python = ">=3.11"
+# Week 2's capture pipeline. See specs/decisions/ADR-0004.md for what each one is for.
+dependencies = [
+    "numpy>=1.26,<2",
+    "Pillow>=11",
+]
+
+[project.optional-dependencies]
+# ONNX export and benchmarking (ml/capture/export.py, task-204). Imported lazily, so only
+# the export path and its tests need these installed — but CI installs them too (ADR-0004).
+export = [
+    "torch==2.9.1",
+    "onnx>=1.22",
+    "onnxruntime>=1.29",
+]
 
 [tool.ruff]
 target-version = "py311"

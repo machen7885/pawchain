@@ -238,8 +238,10 @@ implemented; the command exits non-zero until that week. See `evals/run.py`.
 ### REQ-001 — Capture quality gate
 
 - **behaviour** — Reject an enrolment frame whose aligned face crop is too blurred to embed
-- **number** — Laplacian variance below 120 on the aligned crop
-- **measurement** — `make eval-capture`, writes `evals/out/capture.json` *(planned: Week 2)*
+- **number** — Laplacian variance below 120 on the aligned crop *(placeholder from before
+  any photograph existed — being replaced by a measured value, see ADR-0005)*
+- **measurement** — `make eval-capture`, writes `evals/out/capture.json` *(implemented Week
+  2; exits non-zero today — `status: "golden_set_empty"` — until the golden set is real)*
 - **consequence** — Camera re-prompts the user; the frame is never sent to the server
 
 ### REQ-002 — Multi-frame liveness
@@ -309,7 +311,9 @@ implemented; the command exits non-zero until that week. See `evals/run.py`.
 
 - **behaviour** — Ship the detector and aligner inside the mini-program package
 - **number** — Combined ONNX artefacts ≤ 25 MB
-- **measurement** — `make eval-capture`, writes `evals/out/capture.json` *(planned: Week 2)*
+- **measurement** — `make eval-capture`, writes `evals/out/capture.json` *(export/benchmark
+  tooling implemented Week 2, `ml/capture/export.py`; reported as `req_011: {"status":
+  "blocked"}` — no detector or landmark model is trained yet, see OQ-011)*
 - **consequence** — Above budget, the model is quantised or the stage moves server-side; the package limit is not negotiable
 
 ### REQ-012 — Enrolment duration

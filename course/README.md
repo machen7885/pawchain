@@ -10,7 +10,7 @@ Prerequisites: basic Python. Everything else is taught in flight, agent-assisted
 | Week | Session | Ships |
 |---|---|---|
 | [1](week-01/) | Problem framing and the agent-native dev environment | Spec + threat model + monorepo scaffold with a working agent harness |
-| 2 | Cat detection and landmark alignment | Real-time capture pipeline: phone frame in → aligned, quality-gated face + nose crops out |
+| [2](week-02/) | Cat detection and landmark alignment | Real-time capture pipeline: phone frame in → aligned, quality-gated face + nose crops out |
 | 3 | The fingerprint: nose-print and facial embeddings | Embedding service hitting target verification accuracy on unseen cats, sub-100 ms 1:N lookup |
 | 4 | Agentic data engineering and the evaluation harness | Self-serving data flywheel + eval dashboard; model quality becomes a CI number |
 | 5 | The registry: backend and Mini Program enrollment | End-to-end enrollment — scan a real cat on a phone, get a PetID issued |

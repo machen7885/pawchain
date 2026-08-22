@@ -36,3 +36,12 @@ The seven marked **core** are the ones to be able to define out loud, without no
 | Residual risk | The part of an attack a mitigation does not cover, written down and accepted on purpose. |
 | Harness | Everything that makes agent output checkable without reading it: constitution, specs, task briefs, gates, golden sets, decision records. |
 | Decidable requirement | One that two people who disagree can settle without a third person. If it cannot be shown wrong, it is not finished. |
+| Bounding box | A detector's answer to "where" — four numbers plus a confidence. It does not identify anything, only locates it. |
+| Landmark / keypoint | A specific marked point on a face — an eye centre, the nose tip, an ear tip. `ml/capture` uses five, returned as ten numbers by a landmark model that never says "there is nothing here" — its confidence is what lets a stage refuse. |
+| Canonical template | The fixed target positions the five landmarks are warped onto (`ml/capture/align.py::CANONICAL_TEMPLATE`). Chosen once; everything ever stored downstream depends on the choice (OQ-012). |
+| Alignment / similarity transform | Rotating, resizing and shifting a crop — no stretching or bending — until its landmarks land on the canonical template. |
+| Residual | How far the landmarks still are from the canonical template after the best-possible alignment. Free information, used to reject an implausible pose. |
+| Laplacian variance / blur score | How different neighbouring pixels are from each other, summed over the crop. Not in any physical unit — a threshold only means something relative to your own photos and crop size (ADR-0005). |
+| Sweep | Trying every candidate threshold against the same labelled crops and counting both kinds of mistake at each one, so the trade-off is visible before a threshold is chosen. |
+| Yield | The fraction of captured frames that survive every pipeline stage and come out as a usable crop. Per-stage yields multiply; they do not add. |
+| Reject reason | The named, enum-valued cause attached to every pipeline refusal. Two audiences see it differently: the internal log gets the exact measured value, the person holding the phone gets a short instruction with no numbers in it. |

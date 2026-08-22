@@ -19,6 +19,9 @@ finished task built on an assumption.
 | OQ-008 | What is the re-enrolment cadence that catches deliberate degradation without annoying honest households into leaving? | REQ-001, threat model row 9 | Week 5, after real capture data exists | open |
 | OQ-009 | Is proof of custody across two sessions ≥ 24 h apart acceptable friction for a real household, or does it kill the sign-up funnel? | REQ-016 | Week 5 pilot observation | open |
 | OQ-010 | What is the minimum viable index size at which the ≤ 100 ms p95 budget stops being trivially met? The 100k figure is an assumption about pilot scale, not a measurement. | REQ-006 | Week 3 benchmark | open |
+| OQ-011 | Which detector and landmark architectures fit the REQ-011 25 MB budget, and how are they trained without a labelled dataset that does not exist yet? | REQ-011, `ml/capture/detect.py`, `ml/capture/landmark.py` | Week 2 homework (8 cats) plus a Week 3/4 training pass | open |
+| OQ-012 | Is the canonical five-point alignment template in `ml/capture/align.py` (`CANONICAL_TEMPLATE`) the right one, or does Week 3's embedding accuracy argue for different target positions? | `ml/capture/align.py`, Week 3 embedding | Week 3 measurement, then ADR if changed | open |
+| OQ-013 | Do `POSE_RESIDUAL_MAX` and `ILLUMINATION_CLIP_MAX` deserve their own REQ numbers alongside REQ-001's blur threshold, now that all three are swept the same way? | `specs/00-system-spec.md` §6, ADR-0005 | Next spec revision | open |
 
 ## Resolved
 

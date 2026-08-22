@@ -28,5 +28,9 @@ stop and rewrite the criterion.
 | Task | Implements | Week | Status |
 |---|---|---|---|
 | [task-000-harness](task-000-harness.md) | spec §3, the harness itself | 1 | done |
-| [task-001](task-001.md) | REQ-001 capture quality gate | 2 | not started |
+| [task-001](task-001.md) | REQ-001 capture quality gate | 2 | in progress — blocked on golden-set photos |
+| [task-201](task-201.md) | golden capture set: schema and manifest | 2 | done |
+| [task-202](task-202.md) | `make eval-capture` | 2 | done — exits non-zero until the golden set is real |
+| [task-203](task-203.md) | `capture.process(frame)` | 2 | done |
+| [task-204](task-204.md) | export and measure | 2 | infrastructure done, blocked on a trained model |
 | [task-007](task-007.md) | REQ-007 dedup on enrolment | 3 | not started |

@@ -1,6 +1,10 @@
 # task-001 — Capture quality gate
 
-**Implements** REQ-001 (`specs/00-system-spec.md` §6) · **Week** 2 · **Status** not started
+**Implements** REQ-001 (`specs/00-system-spec.md` §6) · **Week** 2 ·
+**Status** in progress — implemented and tested against synthetic fixtures, blocked on the
+golden-set photos. See task-201 (golden set), task-202 (`make eval-capture`), task-203
+(`capture.process`) and task-204 (export/measure) for the granular breakdown; ADR-0005 for
+why the number 120 has not been replaced yet.
 
 ## Goal
 

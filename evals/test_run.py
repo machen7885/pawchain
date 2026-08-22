@@ -7,7 +7,11 @@ fails instead of reporting a number.
 
 from __future__ import annotations
 
+import hashlib
 import json
+from pathlib import Path
+
+import pytest
 
 from evals import run
 
@@ -42,6 +46,65 @@ def test_every_suite_names_the_week_it_lands():
     for name, suite in run.SUITES.items():
         assert suite.implemented_in_week is not None, name
         assert suite.filename.endswith(".json"), name
+
+
+def test_capture_suite_with_no_manifest_reports_golden_set_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """task-202 #1: no manifest present -> `golden_set_empty`, exit 1."""
+    monkeypatch.setattr(run, "GOLDEN_DIR", tmp_path)
+
+    assert run.run_suite("capture") == 1
+    document = json.loads((run.OUT_DIR / "capture.json").read_text(encoding="utf-8"))
+    assert document["status"] == "golden_set_empty"
+    assert document["accept_rate"] is None
+
+
+def test_capture_suite_reports_integrity_error_on_a_tampered_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """task-202 #2: a manifest whose file no longer matches its recorded hash fails loudly."""
+    golden_dir = tmp_path / "golden"
+    image_root = tmp_path / "images"
+    image_root.mkdir(parents=True)
+    image_path = image_root / "a.jpg"
+    image_path.write_bytes(b"original bytes")
+    digest = hashlib.sha256(image_path.read_bytes()).hexdigest()
+    image_path.write_bytes(b"tampered bytes")
+
+    manifest_path = golden_dir / "capture" / "manifest.json"
+    manifest_path.parent.mkdir(parents=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "version": 1,
+                "images": [
+                    {"id": "a", "relative_path": "a.jpg", "sha256": digest, "label": "usable"}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(run, "GOLDEN_DIR", golden_dir)
+    monkeypatch.setenv("PAWCHAIN_GOLDEN_IMAGES", str(image_root))
+
+    assert run.run_suite("capture") == 1
+    document = json.loads((run.OUT_DIR / "capture.json").read_text(encoding="utf-8"))
+    assert document["status"] == "integrity_error"
+    assert document["mismatched_ids"] == ["a"]
+
+
+def test_capture_json_always_has_the_keys_task_001_requires(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    """task-202 #5: accept_rate, reject_rate, threshold, model_version — always present."""
+    monkeypatch.setattr(run, "GOLDEN_DIR", tmp_path)
+
+    run.run_suite("capture")
+
+    document = json.loads((run.OUT_DIR / "capture.json").read_text(encoding="utf-8"))
+    assert {"accept_rate", "reject_rate", "threshold", "model_version"} <= document.keys()
 
 
 def test_every_requirement_with_a_measurement_maps_to_exactly_one_suite():

@@ -19,3 +19,6 @@ your mind for a reason is the valuable part.
 | [ADR-0001](ADR-0001.md) | PetID is soulbound | accepted |
 | [ADR-0002](ADR-0002.md) | Why a chain at all, and which one | accepted, with revisit trigger |
 | [ADR-0003](ADR-0003.md) | Error budget: FAR ≤ 1%, FRR ≤ 10% | accepted |
+| [ADR-0004](ADR-0004.md) | Week 2 dependencies: numpy, Pillow, torch, ONNX Runtime | accepted |
+| [ADR-0005](ADR-0005.md) | The REQ-001 quality thresholds: still placeholders, and how they get replaced | proposed — pending measurement |
+| [ADR-0006](ADR-0006.md) | Where golden capture imagery lives, given REQ-009 | accepted |

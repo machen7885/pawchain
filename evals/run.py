@@ -15,12 +15,23 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from evals import golden_capture
+from ml.capture.quality import BLUR_THRESHOLD
+
 OUT_DIR = Path(__file__).resolve().parent / "out"
 GOLDEN_DIR = Path(__file__).resolve().parent / "golden"
+
+# REQ-001's target sample size (facilitator guide, Idea 8: "take 150 of your own cropped
+# photos"). Below this, a sweep is measuring noise, not a distribution.
+MIN_GOLDEN_SET_SIZE = 150
+
+# Candidate cutoffs for the blur sweep (ADR-0005). BLUR_THRESHOLD (120, the Week 1
+# placeholder) is always included so `req_001` can report whether it still holds.
+CANDIDATE_BLUR_THRESHOLDS = sorted({40.0, 80.0, BLUR_THRESHOLD, 160.0, 200.0})
 
 # The template generation in use. Templates from different generations are never compared
 # (REQ-008). No model exists yet, so nothing has produced a template.
@@ -147,6 +158,121 @@ def run_gate_suite(suite: Suite) -> int:
     return 0
 
 
+def run_capture_suite(suite: Suite) -> int:
+    """Measure REQ-001 and REQ-011 against the golden capture manifest.
+
+    Three honestly distinct failure states, never confused with a real number
+    (task-202): `golden_set_empty` (no manifest, or one with zero images — today's state,
+    see ADR-0005), `integrity_error` (a referenced file's bytes no longer match its
+    recorded hash), and `measured` (real numbers, which may still fail the suite if the
+    golden set is smaller than `MIN_GOLDEN_SET_SIZE` or REQ-001's bound is not met).
+    """
+    base_payload: dict[str, object] = {
+        "accept_rate": None,
+        "reject_rate": None,
+        "threshold": BLUR_THRESHOLD,
+    }
+    manifest_path = GOLDEN_DIR / "capture" / "manifest.json"
+
+    try:
+        manifest = golden_capture.load_manifest(manifest_path)
+    except FileNotFoundError:
+        payload = {
+            **base_payload,
+            "status": "golden_set_empty",
+            "message": (
+                "No golden capture manifest found. Run the Week 2 homework capture "
+                "protocol, label crops usable/not_usable, then commit "
+                "evals/golden/capture/manifest.json. See specs/tasks/task-201.md."
+            ),
+        }
+        write_metrics(suite, payload)
+        print(f"eval[capture]: FAIL — {payload['message']}", file=sys.stderr)
+        return 1
+
+    if not manifest.images:
+        payload = {
+            **base_payload,
+            "status": "golden_set_empty",
+            "message": "evals/golden/capture/manifest.json exists but has zero labelled images.",
+        }
+        write_metrics(suite, payload)
+        print(f"eval[capture]: FAIL — {payload['message']}", file=sys.stderr)
+        return 1
+
+    image_root = golden_capture.default_image_root()
+    mismatches = golden_capture.verify_hashes(manifest, image_root)
+    if mismatches:
+        payload = {
+            **base_payload,
+            "status": "integrity_error",
+            "mismatched_ids": mismatches,
+        }
+        write_metrics(suite, payload)
+        print(
+            f"eval[capture]: FAIL — {len(mismatches)} file(s) do not match their recorded "
+            f"hash: {mismatches}. A golden set that has silently drifted is worse than an "
+            "empty one.",
+            file=sys.stderr,
+        )
+        return 1
+
+    yields = golden_capture.stage_yield(manifest, image_root)
+    sweep = golden_capture.sweep_thresholds(manifest, image_root, CANDIDATE_BLUR_THRESHOLDS)
+
+    usable_total = sum(1 for image in manifest.images if image.label == "usable")
+    not_usable_total = sum(1 for image in manifest.images if image.label == "not_usable")
+    chosen = next((point for point in sweep if point.threshold == BLUR_THRESHOLD), None)
+
+    req_001_status = "not_measurable"
+    req_001_pass = False
+    if chosen is not None and usable_total and not_usable_total:
+        # REQ-001's bound (task-001 #5): reject >= 95% of unusable frames (bad_admitted
+        # <= 5%), wrongly reject <= 5% of usable ones (good_rejected <= 5%).
+        req_001_pass = chosen.bad_admitted <= 0.05 and chosen.good_rejected <= 0.05
+        req_001_status = "pass" if req_001_pass else "fail"
+
+    end_to_end = yields.get("end_to_end")
+    payload = {
+        "status": "measured",
+        "golden_set_size": len(manifest.images),
+        "usable_count": usable_total,
+        "not_usable_count": not_usable_total,
+        "landmark_labelled_count": sum(
+            1 for image in manifest.images if image.landmarks is not None
+        ),
+        "yield": yields,
+        "accept_rate": end_to_end,
+        "reject_rate": (1 - end_to_end) if end_to_end is not None else None,
+        "threshold": BLUR_THRESHOLD,
+        "blur_sweep": [asdict(point) for point in sweep],
+        "req_001": {
+            "status": req_001_status,
+            "bound": "reject >= 95% of not_usable, wrongly reject <= 5% of usable, same threshold",
+        },
+        "req_011": {
+            "status": "blocked",
+            "reason": (
+                "no trained detector or landmark model exists yet — "
+                "see specs/open-questions.md OQ-011"
+            ),
+        },
+    }
+    destination = write_metrics(suite, payload)
+
+    enough_data = len(manifest.images) >= MIN_GOLDEN_SET_SIZE
+    if enough_data and req_001_pass:
+        print(f"eval[capture]: PASS  metrics written to {destination.relative_to(Path.cwd())}")
+        return 0
+    print(
+        f"eval[capture]: FAIL — golden set has {len(manifest.images)} image(s) "
+        f"(need >= {MIN_GOLDEN_SET_SIZE}), REQ-001 status is {req_001_status!r}. "
+        f"Metrics written to {destination.relative_to(Path.cwd())}.",
+        file=sys.stderr,
+    )
+    return 1
+
+
 def run_unimplemented_suite(suite: Suite) -> int:
     """Record that a scheduled measurement does not exist yet, and fail.
 
@@ -178,8 +304,10 @@ def run_suite(name: str) -> int:
             file=sys.stderr,
         )
         return 2
-    if suite.implemented_in_week == 1:
+    if suite.name == "gate":
         return run_gate_suite(suite)
+    if suite.name == "capture":
+        return run_capture_suite(suite)
     return run_unimplemented_suite(suite)
 
 

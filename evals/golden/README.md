@@ -15,12 +15,15 @@ Rules:
 4. Raw pet imagery is never committed. Golden sets reference data by content hash and are
    fetched from the pilot store; only labels, splits and hashes live in git.
 
-Planned contents:
+Contents:
 
-| Path | Contents | Lands |
-|---|---|---|
-| `capture/` | Frames labelled usable / unusable, for REQ-001 | Week 2 |
-| `identify/` | Held-out identities never seen in training, for REQ-003/004/005 | Week 3 |
-| `dedup/` | Identity pairs including a labelled littermate slice, for REQ-007 | Week 3 |
+| Path | Contents | Lands | Status |
+|---|---|---|---|
+| `capture/` | Frames labelled usable / unusable, for REQ-001 | Week 2 | schema and manifest tooling shipped (task-201); `manifest.json` has zero real entries — see `capture/README.md` |
+| `identify/` | Held-out identities never seen in training, for REQ-003/004/005 | Week 3 | not started |
+| `dedup/` | Identity pairs including a labelled littermate slice, for REQ-007 | Week 3 | not started |
 
-Empty until Week 2, on purpose. The capture homework is what fills it.
+`capture/manifest.json` is real, loadable, and tested against synthetic fixtures
+(`evals/test_golden_capture.py`) — it is simply empty, because no photograph has been
+labelled yet. `make eval-capture` says so explicitly rather than reporting a number nothing
+measured (ADR-0005).
